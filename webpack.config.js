@@ -9,7 +9,9 @@ module.exports = {
     path: path.resolve(__dirname, "dist"),
   },
   devServer: {
-    contentBase: "./dist",
+    static: {
+      directory: path.join(__dirname, "dist"),
+    },
   },
   devtool: "eval-source-map",
   plugins: [
@@ -29,15 +31,12 @@ module.exports = {
       },
       {
         test: /\.(gif|png|avif|jpe?g)$/,
-        use: [
-          {
-            loader: "file-loader",
-            options: {
-              name: "[name].[ext]",
-              outputPath: "assets/images/",
-            },
-          },
-        ],
+        type: "asset/resource",
+        generator: {
+          filename: "[name][ext]",
+          publicPath: "assets/images/",
+          outputPath: "assets/images/",
+        },
       },
       {
         test: /\.html$/,

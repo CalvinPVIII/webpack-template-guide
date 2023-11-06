@@ -1,7 +1,5 @@
 # Simplified Webpack Setup
 
-**This was written for Node version 16, if you have a different version of Node, this will not work. See the bottom of this file for more information**
-
 There are a lot of commands to run, and a lot of things to install and configure, here are the essentials of what you will need to do:
 
 First we will begin by initializing `npm`, run this command in your terminal, in the directory of your template:
@@ -29,9 +27,9 @@ dist/
 
 Next we need to install webpack:
 
-`npm install webpack@4.46.0 --save-dev --save-exact`
+`npm install webpack@5.87.0 --save-dev --save-exact`
 
-`npm install webpack-cli@3.3.12 --save-dev`
+`npm install webpack-cli@5.1.4 --save-dev`
 
 Create our `webpack.config.js` file. Inside that file, add this code:
 
@@ -49,7 +47,7 @@ module.exports = {
 
 To have our css be bundled in, we will add `css-loader` and `style-loader`
 
-`npm install style-loader@1.3.0 css-loader@3.6.0 --save-dev`
+`npm install style-loader@3.3.0 css-loader@6.8.1 --save-dev`
 
 Configuring the loaders in webpack.config.js:
 
@@ -74,7 +72,7 @@ In order for our css to actually get bundled and used, we need to import it into
 
 We'll let webpack handle generating html files, so we will install HTML webpack plugin:
 
-`npm install html-webpack-plugin@4.5.2 --save-dev`
+`npm install html-webpack-plugin@5.5.3 --save-dev`
 
 Add HTML webpack plugin to the webpack.config.js:
 
@@ -97,7 +95,7 @@ plugins: [
 
 Next we will install clean webpack plugin, which will clean up our environment whenever we make changes:
 
-`npm install clean-webpack-plugin@3.0.0 --save-dev`
+`npm install clean-webpack-plugin@4.0.0 --save-dev`
 
 Add the plugin to our webpack config, right below HTML webpack plugin at the top of the file:
 
@@ -113,13 +111,15 @@ To prevent any issues with our bundled code and our browsers dev tools, we need 
 
 To setup a dev live server, we need to install this:
 
-`npm install webpack-dev-server@3.11.3 --save-dev --save-exact`
+`npm install webpack-dev-server@4.15.1 --save-dev --save-exact`
 
 Add the devServer object to our webpack config, this goes right after the `output` object:
 
 ```
 devServer: {
-    contentBase: './dist'
+    static: {
+      directory: path.join(__dirname, "dist"),
+    },
   },
 
 ```
@@ -130,9 +130,9 @@ In order to actually run the server, we need to add in a script to our `package.
 
 Next we will install eslint, which will give us better errors and warnings:
 
-`npm install eslint@8.18.0 --save-dev`
+`npm install eslint@8.42.0 --save-dev`
 
-`npm install eslint-webpack-plugin@2.7.0 --save-dev`
+`npm install eslint-webpack-plugin@4.0.1 --save-dev`
 
 We added a new plugin, so we need to update our webpack-config:
 
@@ -174,7 +174,7 @@ Also I recommend installing the [eslint VS Code plugin](https://marketplace.visu
 
 Next, for testing, we will need to install Jest:
 
-`npm install jest@24.9.0 --save-dev`
+`npm install jest@29.5.0 --save-dev`
 
 In order to actually run our tests, we need to add another script to the `scripts` object of `package.json`:
 
@@ -182,9 +182,9 @@ In order to actually run our tests, we need to add another script to the `script
 
 Next we will install Babel, which will translate any modern JS code into legacy code incase there are any compatibility errors:
 
-`npm install @babel/core@7.18.6 --save-dev`
+`npm install @babel/core@7.22.5 --save-dev`
 
-`npm install @babel/plugin-transform-modules-commonjs@7.18.6 --save-dev`
+`npm install @babel/plugin-transform-modules-commonjs@7.22.5 --save-dev`
 
 To configure babel, we need a `.babelrc` file. Create that file in the root of your project and add the following code:
 
@@ -201,26 +201,23 @@ To configure babel, we need a `.babelrc` file. Create that file in the root of y
 Since we added the `--coverage` flag to our tests, a `coverage` folder will be generated. We don't really need that on our repo, so we can add it to the `.gitignore`:
 `coverage/`
 
-For images, we need file loader and html loader:
+For images, we need html loader:
 
-`npm install file-loader --save-dev`
+`npm install html-loader@4.2.0 --save-dev`
 
-`npm install html-loader@1.3.2 --save-dev`
+We will also need to configure the appropriate asset module
 
 Add this config to our webpack, this goes in the `rules` array, next to our previous `css-loader` configuration:
 
 ```
 {
   test: /\.(gif|png|avif|jpe?g)$/,
-  use: [
-    {
-      loader: 'file-loader',
-      options: {
-        name: '[name].[ext]',
-        outputPath: 'assets/images/'
-      }
-    }
-  ]
+  type: "asset/resource",
+  generator: {
+    filename: "[name][ext]"
+    publicPath: "assets/images/",
+    outputPath: "assets/images/",
+  },
 },
 {
   test:/\.html$/,
@@ -232,7 +229,7 @@ Add this config to our webpack, this goes in the `rules` array, next to our prev
 
 After all that, here is what your final `webpack.config.js` should look like:
 
-```
+```js
 const path = require("path");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const { CleanWebpackPlugin } = require("clean-webpack-plugin");
@@ -244,7 +241,9 @@ module.exports = {
     path: path.resolve(__dirname, "dist"),
   },
   devServer: {
-    contentBase: "./dist",
+    static: {
+      directory: path.join(__dirname, "dist"),
+    },
   },
   devtool: "eval-source-map",
   plugins: [
@@ -264,15 +263,12 @@ module.exports = {
       },
       {
         test: /\.(gif|png|avif|jpe?g)$/,
-        use: [
-          {
-            loader: "file-loader",
-            options: {
-              name: "[name].[ext]",
-              outputPath: "assets/images/",
-            },
-          },
-        ],
+        type: "asset/resource",
+        generator: {
+          filename: "[name][ext]",
+          publicPath: "assets/images/",
+          outputPath: "assets/images/",
+        },
       },
       {
         test: /\.html$/,
@@ -281,12 +277,11 @@ module.exports = {
     ],
   },
 };
-
 ```
 
 And the final `package.json`:
 
-```
+```json
 {
   "name": "project",
   "version": "1.0.0",
@@ -301,21 +296,22 @@ And the final `package.json`:
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "clean-webpack-plugin": "^3.0.0",
-    "css-loader": "^3.6.0",
-    "eslint": "^8.18.0",
-    "eslint-webpack-plugin": "^2.7.0",
+    "@babel/core": "^7.22.5",
+    "@babel/plugin-transform-modules-commonjs": "^7.22.5",
+    "clean-webpack-plugin": "^4.0.0",
+    "css-loader": "^6.8.1",
+    "eslint": "^8.42.0",
+    "eslint-webpack-plugin": "^4.0.1",
     "file-loader": "^6.2.0",
-    "html-loader": "^1.3.2",
-    "html-webpack-plugin": "^4.5.2",
-    "jest": "^24.9.0",
-    "style-loader": "^1.3.0",
-    "webpack": "4.46.0",
-    "webpack-cli": "^3.3.12",
-    "webpack-dev-server": "3.11.3"
+    "html-loader": "^4.2.0",
+    "html-webpack-plugin": "^5.5.3",
+    "jest": "^29.5.0",
+    "style-loader": "^3.3.3",
+    "webpack": "^5.87.0",
+    "webpack-cli": "^5.1.4",
+    "webpack-dev-server": "^4.15.1"
   }
 }
-
 ```
 
 Some things to keep in mind:
@@ -334,37 +330,4 @@ If you are getting an error that looks like this:
 
 `error:0308010C:digital envelope routines::unsupported`
 
-Or any errors that mention an `SSL`, make sure you are on Node version 16.
-
-## If you are using the latest version of Node:
-
-You can follow the guide as is, but there are a couple changes you will need to make.
-
-- When installing packages, do not include any version numbers, and instead download the latest version of all packages.
-  For example, instead of running this command:
-
-  `npm install webpack-cli@3.3.12 --save-dev`
-
-  You won't include the `@3.3.12`. The command will now look like this:
-
-  `npm install webpack-cli --save-dev`
-
-- You do not need to install or configure File Loader
-
-- You will need to change the `devServer` config of `webpack.config.js`. Instead of this:
-
-```
-  devServer: {
-    contentBase: "./dist",
-  },
-```
-
-You will replace that with this:
-
-```
-devServer: {
-  static: {
-    directory: path.join(__dirname, "dist"),
-  },
-}
-```
+Or any errors that mention an `SSL`, make sure you are on Node version 16 or later.
